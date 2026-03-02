@@ -1,14 +1,19 @@
-// ======================================
-// animeTIME SERVER - JIKAN + SEARCH
-// ======================================
-
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 
 const app = express();
 app.use(cors());
 
-// ===== GET NEWS (PAGINATION) =====
+// يخدم جميع الملفات الثابتة
+app.use(express.static(path.join(__dirname)));
+
+// أي مسار غير API يرجع index.html
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "index.html"));
+});
+
+// ===== API NEWS =====
 app.get("/api/news", async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -23,62 +28,22 @@ app.get("/api/news", async (req, res) => {
 
     const formatted = data.data.map(anime => ({
       title: anime.title,
-      description: anime.synopsis || "لا يوجد وصف.",
-      anime: anime.title,
+      description: anime.synopsis || "No description available.",
       date: anime.aired?.from
         ? anime.aired.from.split("T")[0]
-        : "غير محدد",
+        : "Unknown",
       image: anime.images?.jpg?.large_image_url
     }));
 
-    res.json({
-      page,
-      limit,
-      total: data.pagination.items.total,
-      data: formatted
-    });
+    res.json({ page, data: formatted });
 
-  } catch {
+  } catch (err) {
     res.status(500).json({ error: "Failed to fetch news" });
   }
 });
 
-// ===== SEARCH =====
-app.get("/api/search", async (req, res) => {
-  try {
-    const query = req.query.q;
-    if (!query) return res.json({ data: [] });
-
-    const response = await fetch(
-      `https://api.jikan.moe/v4/anime?q=${query}&limit=10`,
-      { headers: { "User-Agent": "animeTIME" } }
-    );
-
-    const data = await response.json();
-
-    const formatted = data.data.map(anime => ({
-      title: anime.title,
-      description: anime.synopsis || "لا يوجد وصف.",
-      anime: anime.title,
-      date: anime.aired?.from
-        ? anime.aired.from.split("T")[0]
-        : "غير محدد",
-      image: anime.images?.jpg?.large_image_url
-    }));
-
-    res.json({ data: formatted });
-
-  } catch {
-    res.status(500).json({ error: "Search failed" });
-  }
-});
-
-// ===== TEST =====
-app.get("/", (req, res) => {
-  res.send("animeTIME server running ✅");
-});
-
-// ===== START =====
-app.listen(3000, () => {
-  console.log("🚀 Server running on http://localhost:3000");
+// ===== PORT =====
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log("animeTIME server is running");
 });
