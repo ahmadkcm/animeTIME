@@ -2,71 +2,126 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>animeTIME | Anime News</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>animeTIME</title>
 
 <style>
-body{
+*{
     margin:0;
-    font-family:Arial;
-    direction:rtl;
-    background:linear-gradient(120deg,#e0f2fe,#f5d0fe,#dcfce7);
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:Segoe UI, sans-serif;
+    color:white;
+    min-height:100vh;
+    overflow-x:hidden;
+    background:linear-gradient(-45deg,#6d28d9,#7c3aed,#db2777,#ec4899);
+    background-size:400% 400%;
+    animation:gradientMove 18s ease infinite;
+}
+
+/* حركة الخلفية */
+@keyframes gradientMove{
+    0%{background-position:0% 50%;}
+    50%{background-position:100% 50%;}
+    100%{background-position:0% 50%;}
 }
 
 header{
     text-align:center;
-    padding:30px;
+    padding:60px 20px 30px 20px;
+}
+
+header h1{
+    font-size:48px;
+    margin-bottom:10px;
+}
+
+header p{
+    opacity:.9;
+    margin-bottom:20px;
+}
+
+button{
+    padding:10px 22px;
+    border:none;
+    border-radius:25px;
+    cursor:pointer;
+    font-weight:bold;
     background:white;
+    color:#7c3aed;
+    transition:.3s;
 }
 
-#searchBox{
+button:hover{
+    transform:scale(1.05);
+}
+
+.searchBox{
+    margin-top:20px;
+}
+
+.searchBox input{
     width:300px;
-    padding:10px;
-    border-radius:20px;
-    border:1px solid #ccc;
-    margin-top:15px;
+    padding:10px 15px;
+    border-radius:25px;
+    border:none;
+    outline:none;
 }
 
-main{
-    max-width:900px;
+/* محتوى */
+.container{
+    max-width:1100px;
     margin:auto;
-    padding:30px 20px;
+    padding:40px 20px;
 }
 
-.article{
+/* كروت */
+.card{
     display:flex;
     gap:20px;
-    background:white;
-    border-radius:16px;
+    background:rgba(255,255,255,.15);
+    backdrop-filter:blur(10px);
+    border-radius:20px;
     padding:20px;
-    margin-bottom:20px;
-    box-shadow:0 5px 15px rgba(0,0,0,.05);
+    margin-bottom:30px;
+    transition:.3s;
 }
 
-.image-box{
-    width:140px;
-    height:180px;
-    border-radius:12px;
-    overflow:hidden;
-    background:#eee;
-    flex-shrink:0;
+.card:hover{
+    transform:translateY(-6px);
 }
 
-.image-box img{
-    width:100%;
-    height:100%;
+.card img{
+    width:160px;
+    height:220px;
+    border-radius:15px;
     object-fit:cover;
 }
 
-#loadMore{
+.card h3{
+    margin-bottom:8px;
+}
+
+.card p{
+    opacity:.9;
+    font-size:14px;
+}
+
+/* زر تحميل */
+.loadMore{
     display:block;
-    margin:30px auto;
-    padding:10px 25px;
-    border:none;
-    border-radius:20px;
-    background:#6366f1;
-    color:white;
-    cursor:pointer;
+    margin:40px auto;
+}
+
+/* تذييل */
+footer{
+    text-align:center;
+    padding:40px 20px;
+    background:rgba(0,0,0,.15);
+    backdrop-filter:blur(10px);
 }
 </style>
 </head>
@@ -75,93 +130,83 @@ main{
 
 <header>
     <h1>animeTIME</h1>
-    <input type="text" id="searchBox" placeholder="ابحث عن أنمي...">
+    <p>Real Anime News & Live Search</p>
+
+    <div class="searchBox">
+        <input type="text" id="search" placeholder="Search anime...">
+    </div>
+
+    <br>
+    <button onclick="toggleMode()">Toggle Mode</button>
 </header>
 
-<main>
+<div class="container">
     <div id="news"></div>
-    <button id="loadMore">تحميل المزيد</button>
-</main>
+    <button class="loadMore" onclick="loadNews()">Load More</button>
+</div>
+
+<footer>
+    <h3>Contact Us</h3>
+    <p>📧 akacemahmad@gmail.com</p>
+</footer>
 
 <script>
 let page = 1;
-const limit = 5;
 let searching = false;
 
-// ===== LOAD NORMAL NEWS =====
-async function loadNews(){
-    if(searching) return;
-
-    const res = await fetch(
-        `http://localhost:3000/api/news?page=${page}&limit=${limit}`
-    );
-    const json = await res.json();
-
-    render(json.data);
-
-    if(page * limit >= json.total){
-        document.getElementById("loadMore").style.display="none";
-    }
-
-    page++;
+/* Dark mode */
+function toggleMode(){
+    document.body.classList.toggle("dark");
 }
 
-// ===== SEARCH FUNCTION =====
-async function searchAnime(query){
-    const res = await fetch(
-        `http://localhost:3000/api/search?q=${query}`
-    );
-    const json = await res.json();
-
-    document.getElementById("news").innerHTML="";
-    render(json.data);
-}
-
-// ===== RENDER FUNCTION =====
+/* عرض البيانات */
 function render(list){
     const box = document.getElementById("news");
-
-    list.forEach(n=>{
+    list.forEach(anime=>{
         const div = document.createElement("div");
-        div.className="article";
-
+        div.className="card";
         div.innerHTML=`
-            <div class="image-box">
-                <img src="${n.image}">
-            </div>
+            <img src="${anime.image}">
             <div>
-                <h3>${n.title}</h3>
-                <small>${n.date}</small>
-                <p>${n.description}</p>
+                <h3>${anime.title}</h3>
+                <p>${anime.description?.substring(0,250) || ""}...</p>
             </div>
         `;
-
         box.appendChild(div);
     });
 }
 
-// ===== SEARCH LISTENER =====
-document.getElementById("searchBox")
-.addEventListener("input", (e)=>{
+/* تحميل الأخبار */
+async function loadNews(){
+    if(searching) return;
+
+    const res = await fetch(`/api/news?page=${page}&limit=6`);
+    const json = await res.json();
+    render(json.data);
+    page++;
+}
+
+/* البحث */
+document.getElementById("search").addEventListener("input", async (e)=>{
     const value = e.target.value.trim();
+    const box = document.getElementById("news");
 
     if(value.length > 1){
         searching = true;
-        document.getElementById("loadMore").style.display="none";
-        searchAnime(value);
+        box.innerHTML="";
+        const res = await fetch(`/api/search?q=${value}`);
+        const json = await res.json();
+        render(json.data);
     }else{
         searching = false;
-        document.getElementById("news").innerHTML="";
-        page = 1;
-        document.getElementById("loadMore").style.display="block";
+        box.innerHTML="";
+        page=1;
         loadNews();
     }
 });
 
-// INIT
+/* تحميل أول مرة */
 loadNews();
-document.getElementById("loadMore").onclick = loadNews;
-
 </script>
 
 </body>
