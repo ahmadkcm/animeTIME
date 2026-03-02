@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>animeTIME | Anime News</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+    margin:0;
+    font-family:Arial;
+    direction:rtl;
+    background:linear-gradient(120deg,#e0f2fe,#f5d0fe,#dcfce7);
+}
+
+header{
+    text-align:center;
+    padding:30px;
+    background:white;
+}
+
+#searchBox{
+    width:300px;
+    padding:10px;
+    border-radius:20px;
+    border:1px solid #ccc;
+    margin-top:15px;
+}
+
+main{
+    max-width:900px;
+    margin:auto;
+    padding:30px 20px;
+}
+
+.article{
+    display:flex;
+    gap:20px;
+    background:white;
+    border-radius:16px;
+    padding:20px;
+    margin-bottom:20px;
+    box-shadow:0 5px 15px rgba(0,0,0,.05);
+}
+
+.image-box{
+    width:140px;
+    height:180px;
+    border-radius:12px;
+    overflow:hidden;
+    background:#eee;
+    flex-shrink:0;
+}
+
+.image-box img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+}
+
+#loadMore{
+    display:block;
+    margin:30px auto;
+    padding:10px 25px;
+    border:none;
+    border-radius:20px;
+    background:#6366f1;
+    color:white;
+    cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>animeTIME</h1>
+    <input type="text" id="searchBox" placeholder="ابحث عن أنمي...">
+</header>
+
+<main>
+    <div id="news"></div>
+    <button id="loadMore">تحميل المزيد</button>
+</main>
+
+<script>
+let page = 1;
+const limit = 5;
+let searching = false;
+
+// ===== LOAD NORMAL NEWS =====
+async function loadNews(){
+    if(searching) return;
+
+    const res = await fetch(
+        `http://localhost:3000/api/news?page=${page}&limit=${limit}`
+    );
+    const json = await res.json();
+
+    render(json.data);
+
+    if(page * limit >= json.total){
+        document.getElementById("loadMore").style.display="none";
+    }
+
+    page++;
+}
+
+// ===== SEARCH FUNCTION =====
+async function searchAnime(query){
+    const res = await fetch(
+        `http://localhost:3000/api/search?q=${query}`
+    );
+    const json = await res.json();
+
+    document.getElementById("news").innerHTML="";
+    render(json.data);
+}
+
+// ===== RENDER FUNCTION =====
+function render(list){
+    const box = document.getElementById("news");
+
+    list.forEach(n=>{
+        const div = document.createElement("div");
+        div.className="article";
+
+        div.innerHTML=`
+            <div class="image-box">
+                <img src="${n.image}">
+            </div>
+            <div>
+                <h3>${n.title}</h3>
+                <small>${n.date}</small>
+                <p>${n.description}</p>
+            </div>
+        `;
+
+        box.appendChild(div);
+    });
+}
+
+// ===== SEARCH LISTENER =====
+document.getElementById("searchBox")
+.addEventListener("input", (e)=>{
+    const value = e.target.value.trim();
+
+    if(value.length > 1){
+        searching = true;
+        document.getElementById("loadMore").style.display="none";
+        searchAnime(value);
+    }else{
+        searching = false;
+        document.getElementById("news").innerHTML="";
+        page = 1;
+        document.getElementById("loadMore").style.display="block";
+        loadNews();
+    }
+});
+
+// INIT
+loadNews();
+document.getElementById("loadMore").onclick = loadNews;
+
+</script>
+
+</body>
+</html>
