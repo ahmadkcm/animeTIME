@@ -5,13 +5,8 @@ const path = require("path");
 const app = express();
 app.use(cors());
 
-// يخدم جميع الملفات الثابتة
+// يخدم الملفات الثابتة
 app.use(express.static(path.join(__dirname)));
-
-// أي مسار غير API يرجع index.html
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "index.html"));
-});
 
 // ===== API NEWS =====
 app.get("/api/news", async (req, res) => {
@@ -40,6 +35,40 @@ app.get("/api/news", async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch news" });
   }
+});
+
+// ===== SEARCH =====
+app.get("/api/search", async (req, res) => {
+  try {
+    const query = req.query.q;
+    if (!query) return res.json({ data: [] });
+
+    const response = await fetch(
+      `https://api.jikan.moe/v4/anime?q=${query}&limit=10`,
+      { headers: { "User-Agent": "animeTIME" } }
+    );
+
+    const data = await response.json();
+
+    const formatted = data.data.map(anime => ({
+      title: anime.title,
+      description: anime.synopsis || "No description available.",
+      date: anime.aired?.from
+        ? anime.aired.from.split("T")[0]
+        : "Unknown",
+      image: anime.images?.jpg?.large_image_url
+    }));
+
+    res.json({ data: formatted });
+
+  } catch (err) {
+    res.status(500).json({ error: "Search failed" });
+  }
+});
+
+// ===== الصفحة الرئيسية فقط =====
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "index.html"));
 });
 
 // ===== PORT =====
