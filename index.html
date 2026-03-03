@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>animeTIME</title>
+
 <style>
 body{
   margin:0;
@@ -12,12 +13,15 @@ body{
   background-size:400% 400%;
   animation:move 20s infinite ease;
 }
+
 @keyframes move{
   0%{background-position:0% 50%;}
   50%{background-position:100% 50%;}
   100%{background-position:0% 50%;}
 }
+
 header{text-align:center;padding:40px;}
+
 button{
   padding:8px 15px;
   border:none;
@@ -25,16 +29,33 @@ button{
   cursor:pointer;
   margin:5px;
 }
-.container{max-width:1100px;margin:auto;padding:30px;}
+
+input{
+  padding:8px 12px;
+  border-radius:20px;
+  border:none;
+  outline:none;
+}
+
+.container{
+  max-width:1100px;
+  margin:auto;
+  padding:30px;
+}
+
 .card{
   background:rgba(255,255,255,.15);
   padding:20px;
   border-radius:15px;
   margin-bottom:20px;
 }
+
 .card img{
-  width:200px;
-  border-radius:10px;
+  width:100%;
+  max-width:350px;
+  border-radius:12px;
+  display:block;
+  margin-bottom:15px;
 }
 </style>
 </head>
@@ -43,21 +64,34 @@ button{
 
 <header>
 <h1>animeTIME</h1>
-<button onclick="loadAnime()">Anime</button>
-<button onclick="loadGaming()">Gaming</button>
+
+<button onclick="switchMode('anime')">Anime</button>
+<button onclick="switchMode('gaming')">Gaming</button>
+
+<br><br>
+
+<input type="text" id="search" placeholder="Search anime...">
+<button onclick="searchAnime()">Search</button>
 </header>
 
 <div class="container" id="content"></div>
 
+<div style="text-align:center;">
+<button onclick="loadMore()">Show More</button>
+</div>
+
 <script>
-function render(list){
+let currentMode="anime";
+let page=1;
+
+function render(list, append=true){
   const box=document.getElementById("content");
-  box.innerHTML="";
+  if(!append) box.innerHTML="";
   list.forEach(item=>{
     box.innerHTML+=`
       <div class="card">
         <h2>${item.title}</h2>
-        ${item.image ? `<img src="${item.image}">` : ""}
+        <img src="${item.image}">
         <p>${item.description}</p>
         <a href="${item.link}" target="_blank">
           <button>Read More</button>
@@ -67,19 +101,33 @@ function render(list){
   });
 }
 
-async function loadAnime(){
-  const res=await fetch("/api/anime");
+async function loadData(){
+  const res=await fetch(`/api/${currentMode}?page=${page}`);
   const json=await res.json();
   render(json.data);
 }
 
-async function loadGaming(){
-  const res=await fetch("/api/gaming");
-  const json=await res.json();
-  render(json.data);
+function loadMore(){
+  page++;
+  loadData();
 }
 
-loadAnime();
+function switchMode(mode){
+  currentMode=mode;
+  page=1;
+  document.getElementById("content").innerHTML="";
+  loadData();
+}
+
+async function searchAnime(){
+  const q=document.getElementById("search").value;
+  if(!q) return;
+  const res=await fetch(`/api/search-anime?q=${q}`);
+  const json=await res.json();
+  render(json.data,false);
+}
+
+loadData();
 </script>
 
 </body>

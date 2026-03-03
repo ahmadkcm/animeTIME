@@ -1,7 +1,3 @@
-// ======================================
-// animeTIME - Anime + Gaming News
-// ======================================
-
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
@@ -10,56 +6,86 @@ const app = express();
 app.use(cors());
 app.use(express.static(path.join(__dirname)));
 
-const NEWS_KEY = "cabdf6f4255d4a97a809075c6d1aec23";
+const NEWS_KEY = "YOUR_NEWSAPI_KEY";
 
-// ===== ANIME NEWS =====
+// ===== ANIME =====
 app.get("/api/anime", async (req, res) => {
   try {
+    const page = req.query.page || 1;
+
     const response = await fetch(
-      `https://api.jikan.moe/v4/anime?page=1&limit=6`
+      `https://api.jikan.moe/v4/anime?page=${page}&limit=10`
     );
+
     const data = await response.json();
 
     const formatted = data.data.map(a => ({
-      type: "anime",
       title: a.title,
-      image: a.images?.jpg?.large_image_url || 
+      image: a.images?.jpg?.large_image_url ||
              "https://via.placeholder.com/400x250?text=Anime",
-      description: a.synopsis?.substring(0,200) || 
+      description: a.synopsis?.substring(0,200) ||
                    "No description available.",
       link: a.url
     }));
 
     res.json({ data: formatted });
 
-  } catch (err) {
-    res.status(500).json({ error: "Anime fetch failed" });
+  } catch {
+    res.status(500).json({ error: "Anime failed" });
   }
 });
 
-// ===== GAMING NEWS =====
-app.get("/api/gaming", async (req, res) => {
+// ===== SEARCH ANIME =====
+app.get("/api/search-anime", async (req, res) => {
   try {
+    const q = req.query.q;
+
     const response = await fetch(
-      `https://newsapi.org/v2/everything?q=gaming OR video games&sortBy=publishedAt&pageSize=20&apiKey=${NEWS_KEY}`
+      `https://api.jikan.moe/v4/anime?q=${q}&limit=10`
     );
 
     const data = await response.json();
 
-    const formatted = data.articles.slice(0, 6).map(n => ({
-      type: "gaming",
+    const formatted = data.data.map(a => ({
+      title: a.title,
+      image: a.images?.jpg?.large_image_url ||
+             "https://via.placeholder.com/400x250?text=Anime",
+      description: a.synopsis?.substring(0,200) ||
+                   "No description available.",
+      link: a.url
+    }));
+
+    res.json({ data: formatted });
+
+  } catch {
+    res.status(500).json({ error: "Search failed" });
+  }
+});
+
+// ===== GAMING =====
+app.get("/api/gaming", async (req, res) => {
+  try {
+    const page = req.query.page || 1;
+
+    const response = await fetch(
+      `https://newsapi.org/v2/everything?q=gaming OR video games&page=${page}&pageSize=10&apiKey=${NEWS_KEY}`
+    );
+
+    const data = await response.json();
+
+    const formatted = data.articles.map(n => ({
       title: n.title,
-      image: n.urlToImage || 
-             "https://via.placeholder.com/400x250?text=Gaming+News",
-      description: n.description || 
+      image: n.urlToImage ||
+             "https://via.placeholder.com/400x250?text=Gaming",
+      description: n.description ||
                    "No description available.",
       link: n.url
     }));
 
     res.json({ data: formatted });
 
-  } catch (err) {
-    res.status(500).json({ error: "Gaming fetch failed" });
+  } catch {
+    res.status(500).json({ error: "Gaming failed" });
   }
 });
 
@@ -69,7 +95,6 @@ app.get("/", (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-
 app.listen(PORT, () => {
   console.log("🚀 animeTIME running");
 });
