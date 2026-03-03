@@ -1,5 +1,5 @@
 // ======================================
-// animeTIME - FULL SERVER (Railway Ready)
+// animeTIME - Official Links Version
 // ======================================
 
 const express = require("express");
@@ -9,18 +9,17 @@ const path = require("path");
 const app = express();
 app.use(cors());
 
-// يخدم ملفات الواجهة (index.html, css, js...)
+// يخدم ملفات الواجهة
 app.use(express.static(path.join(__dirname)));
 
 // ===== API NEWS =====
 app.get("/api/news", async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 3;
+    const limit = parseInt(req.query.limit) || 5;
 
     const response = await fetch(
-      `https://api.jikan.moe/v4/anime?page=${page}&limit=${limit}`,
-      { headers: { "User-Agent": "animeTIME" } }
+      `https://api.jikan.moe/v4/anime?page=${page}&limit=${limit}`
     );
 
     const data = await response.json();
@@ -32,13 +31,14 @@ app.get("/api/news", async (req, res) => {
         ? anime.aired.from.split("T")[0]
         : "Unknown",
       image: anime.images?.jpg?.large_image_url || "",
-      trailer: anime.trailer?.embed_url || null
+      mal_url: anime.url,
+      official_site:
+        anime.external?.find(e =>
+          e.name.toLowerCase().includes("official")
+        )?.url || null
     }));
 
-    res.json({
-      page,
-      data: formatted
-    });
+    res.json({ page, data: formatted });
 
   } catch (error) {
     console.error(error);
@@ -46,15 +46,14 @@ app.get("/api/news", async (req, res) => {
   }
 });
 
-// ===== SEARCH API =====
+// ===== SEARCH =====
 app.get("/api/search", async (req, res) => {
   try {
     const query = req.query.q;
     if (!query) return res.json({ data: [] });
 
     const response = await fetch(
-      `https://api.jikan.moe/v4/anime?q=${query}&limit=5`,
-      { headers: { "User-Agent": "animeTIME" } }
+      `https://api.jikan.moe/v4/anime?q=${query}&limit=5`
     );
 
     const data = await response.json();
@@ -66,7 +65,11 @@ app.get("/api/search", async (req, res) => {
         ? anime.aired.from.split("T")[0]
         : "Unknown",
       image: anime.images?.jpg?.large_image_url || "",
-      trailer: anime.trailer?.embed_url || null
+      mal_url: anime.url,
+      official_site:
+        anime.external?.find(e =>
+          e.name.toLowerCase().includes("official")
+        )?.url || null
     }));
 
     res.json({ data: formatted });
@@ -86,5 +89,5 @@ app.get("/", (req, res) => {
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log("🚀 animeTIME server is running");
+  console.log("🚀 animeTIME running");
 });
