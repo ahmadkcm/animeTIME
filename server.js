@@ -10,7 +10,7 @@ const app = express();
 app.use(cors());
 app.use(express.static(path.join(__dirname)));
 
-const NEWS_KEY = "YOUR_NEWSAPI_KEY";
+const NEWS_KEY = "cabdf6f4255d4a97a809075c6d1aec23";
 
 // ===== ANIME NEWS =====
 app.get("/api/anime", async (req, res) => {
