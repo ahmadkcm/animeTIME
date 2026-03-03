@@ -14,15 +14,26 @@
 
 body{
     font-family:Segoe UI, sans-serif;
-    color:white;
     min-height:100vh;
     overflow-x:hidden;
+    transition:.4s;
+}
+
+/* خلفية متحركة */
+body.light{
     background:linear-gradient(-45deg,#6d28d9,#7c3aed,#db2777,#ec4899);
     background-size:400% 400%;
     animation:gradientMove 18s ease infinite;
+    color:white;
 }
 
-/* حركة الخلفية */
+body.dark{
+    background:linear-gradient(-45deg,#0f172a,#1e293b,#111827,#1f2937);
+    background-size:400% 400%;
+    animation:gradientMove 18s ease infinite;
+    color:white;
+}
+
 @keyframes gradientMove{
     0%{background-position:0% 50%;}
     50%{background-position:100% 50%;}
@@ -34,33 +45,15 @@ header{
     padding:60px 20px 30px 20px;
 }
 
-header h1{
-    font-size:48px;
-    margin-bottom:10px;
-}
-
-header p{
-    opacity:.9;
-    margin-bottom:20px;
-}
-
 button{
-    padding:10px 22px;
+    padding:10px 20px;
     border:none;
     border-radius:25px;
     cursor:pointer;
     font-weight:bold;
     background:white;
     color:#7c3aed;
-    transition:.3s;
-}
-
-button:hover{
-    transform:scale(1.05);
-}
-
-.searchBox{
-    margin-top:20px;
+    margin-top:15px;
 }
 
 .searchBox input{
@@ -69,68 +62,53 @@ button:hover{
     border-radius:25px;
     border:none;
     outline:none;
+    margin-top:15px;
 }
 
-/* محتوى */
 .container{
     max-width:1100px;
     margin:auto;
     padding:40px 20px;
 }
 
-/* كروت */
 .card{
-    display:flex;
-    gap:20px;
     background:rgba(255,255,255,.15);
     backdrop-filter:blur(10px);
     border-radius:20px;
     padding:20px;
-    margin-bottom:30px;
+    margin-bottom:40px;
     transition:.3s;
 }
 
 .card:hover{
-    transform:translateY(-6px);
+    transform:translateY(-5px);
 }
 
 .card img{
-    width:160px;
-    height:220px;
+    width:200px;
     border-radius:15px;
-    object-fit:cover;
+    margin-bottom:15px;
 }
 
-.card h3{
-    margin-bottom:8px;
+iframe{
+    width:100%;
+    height:300px;
+    border-radius:15px;
+    margin-top:15px;
 }
 
-.card p{
-    opacity:.9;
-    font-size:14px;
-}
-
-/* زر تحميل */
-.loadMore{
-    display:block;
-    margin:40px auto;
-}
-
-/* تذييل */
 footer{
     text-align:center;
-    padding:40px 20px;
-    background:rgba(0,0,0,.15);
-    backdrop-filter:blur(10px);
+    padding:40px;
 }
 </style>
 </head>
 
-<body>
+<body class="light">
 
 <header>
     <h1>animeTIME</h1>
-    <p>Real Anime News & Live Search</p>
+    <p>Live Anime News + Trailers</p>
 
     <div class="searchBox">
         <input type="text" id="search" placeholder="Search anime...">
@@ -142,7 +120,7 @@ footer{
 
 <div class="container">
     <div id="news"></div>
-    <button class="loadMore" onclick="loadNews()">Load More</button>
+    <button onclick="loadNews()">Load More</button>
 </div>
 
 <footer>
@@ -154,39 +132,49 @@ footer{
 let page = 1;
 let searching = false;
 
-/* Dark mode */
+/* Toggle Mode */
 function toggleMode(){
-    document.body.classList.toggle("dark");
+    const body = document.body;
+    if(body.classList.contains("light")){
+        body.classList.remove("light");
+        body.classList.add("dark");
+    } else {
+        body.classList.remove("dark");
+        body.classList.add("light");
+    }
 }
 
-/* عرض البيانات */
+/* Render */
 function render(list){
     const box = document.getElementById("news");
+
     list.forEach(anime=>{
         const div = document.createElement("div");
         div.className="card";
+
         div.innerHTML=`
+            <h2>${anime.title}</h2>
             <img src="${anime.image}">
-            <div>
-                <h3>${anime.title}</h3>
-                <p>${anime.description?.substring(0,250) || ""}...</p>
-            </div>
+            <p>${anime.description?.substring(0,250) || ""}...</p>
+            ${anime.trailer ? `<iframe src="${anime.trailer}" allowfullscreen></iframe>` : ""}
         `;
+
         box.appendChild(div);
     });
 }
 
-/* تحميل الأخبار */
+/* Load News */
 async function loadNews(){
     if(searching) return;
 
-    const res = await fetch(`/api/news?page=${page}&limit=6`);
+    const res = await fetch(`/api/news?page=${page}&limit=3`);
     const json = await res.json();
+
     render(json.data);
     page++;
 }
 
-/* البحث */
+/* Search */
 document.getElementById("search").addEventListener("input", async (e)=>{
     const value = e.target.value.trim();
     const box = document.getElementById("news");
@@ -205,7 +193,6 @@ document.getElementById("search").addEventListener("input", async (e)=>{
     }
 });
 
-/* تحميل أول مرة */
 loadNews();
 </script>
 
