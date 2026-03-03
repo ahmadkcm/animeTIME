@@ -1,3 +1,7 @@
+// ======================================
+// animeTIME - Full Version
+// ======================================
+
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
@@ -6,7 +10,7 @@ const app = express();
 app.use(cors());
 app.use(express.static(path.join(__dirname)));
 
-const NEWS_KEY = "YOUR_NEWSAPI_KEY";
+const NEWS_KEY = "cabdf6f4255d4a97a809075c6d1aec23";
 
 // ===== ANIME =====
 app.get("/api/anime", async (req, res) => {
@@ -14,7 +18,7 @@ app.get("/api/anime", async (req, res) => {
     const page = req.query.page || 1;
 
     const response = await fetch(
-      `https://api.jikan.moe/v4/anime?page=${page}&limit=10`
+      `https://api.jikan.moe/v4/anime?page=${page}&limit=8`
     );
 
     const data = await response.json();
@@ -25,7 +29,8 @@ app.get("/api/anime", async (req, res) => {
              "https://via.placeholder.com/400x250?text=Anime",
       description: a.synopsis?.substring(0,200) ||
                    "No description available.",
-      link: a.url
+      link: a.url,
+      trailer: a.trailer?.embed_url || null
     }));
 
     res.json({ data: formatted });
@@ -41,7 +46,7 @@ app.get("/api/search-anime", async (req, res) => {
     const q = req.query.q;
 
     const response = await fetch(
-      `https://api.jikan.moe/v4/anime?q=${q}&limit=10`
+      `https://api.jikan.moe/v4/anime?q=${q}&limit=8`
     );
 
     const data = await response.json();
@@ -52,7 +57,8 @@ app.get("/api/search-anime", async (req, res) => {
              "https://via.placeholder.com/400x250?text=Anime",
       description: a.synopsis?.substring(0,200) ||
                    "No description available.",
-      link: a.url
+      link: a.url,
+      trailer: a.trailer?.embed_url || null
     }));
 
     res.json({ data: formatted });
@@ -68,7 +74,7 @@ app.get("/api/gaming", async (req, res) => {
     const page = req.query.page || 1;
 
     const response = await fetch(
-      `https://newsapi.org/v2/everything?q=gaming OR video games&page=${page}&pageSize=10&apiKey=${NEWS_KEY}`
+      `https://newsapi.org/v2/everything?q=gaming OR video games&page=${page}&pageSize=8&apiKey=${NEWS_KEY}`
     );
 
     const data = await response.json();
@@ -95,6 +101,7 @@ app.get("/", (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
+
 app.listen(PORT, () => {
   console.log("🚀 animeTIME running");
 });

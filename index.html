@@ -47,7 +47,7 @@ input{
   background:rgba(255,255,255,.15);
   padding:20px;
   border-radius:15px;
-  margin-bottom:20px;
+  margin-bottom:25px;
 }
 
 .card img{
@@ -56,6 +56,13 @@ input{
   border-radius:12px;
   display:block;
   margin-bottom:15px;
+}
+
+iframe{
+  width:100%;
+  height:300px;
+  border-radius:12px;
+  margin-top:15px;
 }
 </style>
 </head>
@@ -87,12 +94,18 @@ let page=1;
 function render(list, append=true){
   const box=document.getElementById("content");
   if(!append) box.innerHTML="";
+
   list.forEach(item=>{
     box.innerHTML+=`
       <div class="card">
         <h2>${item.title}</h2>
         <img src="${item.image}">
         <p>${item.description}</p>
+
+        ${item.trailer ? 
+          `<iframe src="${item.trailer}" allowfullscreen></iframe>` 
+          : ""}
+
         <a href="${item.link}" target="_blank">
           <button>Read More</button>
         </a>
