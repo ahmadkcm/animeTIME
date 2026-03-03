@@ -140,7 +140,11 @@ async function searchAnime(){
   render(json.data,false);
 }
 
-loadData();
+async function loadData(){
+  const res=await fetch(`/api/${currentMode}?page=${page}`);
+  const json=await res.json();
+  render(json.data);
+}
 </script>
 
 </body>

@@ -74,27 +74,31 @@ app.get("/api/gaming", async (req, res) => {
     const page = req.query.page || 1;
 
     const response = await fetch(
-      `https://newsapi.org/v2/everything?q=gaming OR video games&page=${page}&pageSize=8&apiKey=${NEWS_KEY}`
+      `https://newsapi.org/v2/everything?q=gaming OR video games&language=en&page=${page}&pageSize=8&apiKey=${NEWS_KEY}`
     );
 
     const data = await response.json();
 
+    if (data.status !== "ok") {
+      return res.json({ data: [] });
+    }
+
     const formatted = data.articles.map(n => ({
-      title: n.title,
-      image: n.urlToImage ||
+      title: n.title || "No title",
+      image: n.urlToImage || 
              "https://via.placeholder.com/400x250?text=Gaming",
-      description: n.description ||
+      description: n.description || 
                    "No description available.",
-      link: n.url
+      link: n.url || "#"
     }));
 
     res.json({ data: formatted });
 
-  } catch {
-    res.status(500).json({ error: "Gaming failed" });
+  } catch (err) {
+    console.log(err);
+    res.json({ data: [] });
   }
 });
-
 // ===== HOME =====
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
