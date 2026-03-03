@@ -1,65 +1,86 @@
-const express = require("express");
-const cors = require("cors");
-const path = require("path");
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>animeTIME</title>
+<style>
+body{
+  margin:0;
+  font-family:Segoe UI;
+  color:white;
+  background:linear-gradient(-45deg,#6d28d9,#7c3aed,#db2777,#ec4899);
+  background-size:400% 400%;
+  animation:move 20s infinite ease;
+}
+@keyframes move{
+  0%{background-position:0% 50%;}
+  50%{background-position:100% 50%;}
+  100%{background-position:0% 50%;}
+}
+header{text-align:center;padding:40px;}
+button{
+  padding:8px 15px;
+  border:none;
+  border-radius:20px;
+  cursor:pointer;
+  margin:5px;
+}
+.container{max-width:1100px;margin:auto;padding:30px;}
+.card{
+  background:rgba(255,255,255,.15);
+  padding:20px;
+  border-radius:15px;
+  margin-bottom:20px;
+}
+.card img{
+  width:200px;
+  border-radius:10px;
+}
+</style>
+</head>
 
-const app = express();
-app.use(cors());
-app.use(express.static(path.join(__dirname)));
+<body>
 
-const NEWS_KEY = "YOUR_NEWSAPI_KEY";
+<header>
+<h1>animeTIME</h1>
+<button onclick="loadAnime()">Anime</button>
+<button onclick="loadGaming()">Gaming</button>
+</header>
 
-// ===== ANIME =====
-app.get("/api/anime", async (req, res) => {
-  try {
-    const response = await fetch(
-      `https://api.jikan.moe/v4/anime?page=1&limit=6`
-    );
-    const data = await response.json();
+<div class="container" id="content"></div>
 
-    const formatted = data.data.map(a => ({
-      type: "anime",
-      title: a.title,
-      image: a.images?.jpg?.large_image_url,
-      description: a.synopsis?.substring(0,200) || "",
-      link: a.url
-    }));
+<script>
+function render(list){
+  const box=document.getElementById("content");
+  box.innerHTML="";
+  list.forEach(item=>{
+    box.innerHTML+=`
+      <div class="card">
+        <h2>${item.title}</h2>
+        ${item.image ? `<img src="${item.image}">` : ""}
+        <p>${item.description}</p>
+        <a href="${item.link}" target="_blank">
+          <button>Read More</button>
+        </a>
+      </div>
+    `;
+  });
+}
 
-    res.json({ data: formatted });
-  } catch {
-    res.status(500).json({ error: "Anime failed" });
-  }
-});
+async function loadAnime(){
+  const res=await fetch("/api/anime");
+  const json=await res.json();
+  render(json.data);
+}
 
-// ===== GAMING NEWS =====
-app.get("/api/gaming", async (req, res) => {
-  try {
-    const response = await fetch(
-      `https://newsapi.org/v2/everything?q=gaming&language=en&pageSize=6&apiKey=${NEWS_KEY}`
-    );
+async function loadGaming(){
+  const res=await fetch("/api/gaming");
+  const json=await res.json();
+  render(json.data);
+}
 
-    const data = await response.json();
+loadAnime();
+</script>
 
-    const formatted = data.articles.map(n => ({
-      type: "gaming",
-      title: n.title,
-      image: n.urlToImage,
-      description: n.description || "",
-      link: n.url
-    }));
-
-    res.json({ data: formatted });
-
-  } catch {
-    res.status(500).json({ error: "Gaming failed" });
-  }
-});
-
-// ===== HOME =====
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "index.html"));
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log("🚀 animeTIME + Gaming News running");
-});
+</body>
+</html>
